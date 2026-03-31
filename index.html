@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Hospital HQ - Full Security & Reports</title>
+<style>
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:#f0f2f5; margin:20px; color:#333; }
+    .container { max-width:1100px; margin:auto; }
+    .admin-bar { background:#2c3e50; color:white; padding:15px 20px; border-radius:8px; margin-bottom:20px; display:flex; justify-content:space-between; align-items:center; }
+    .section { margin-bottom:25px; padding:20px; background:white; border-radius:8px; box-shadow:0 2px 10px rgba(0,0,0,0.08); }
+    input, select, button { padding:10px; margin:5px 0; border-radius:5px; border:1px solid #ddd; }
+    button { cursor:pointer; background: #007bff; color: white; border: none; transition: 0.3s; }
+    button:hover { background: #0056b3; }
+    table { width:100%; border-collapse:collapse; margin-top:15px; }
+    th, td { padding:12px; border:1px solid #eee; text-align:left; }
+    th { background:#f8f9fa; }
+    .hidden { display:none; }
+    .alert-card { padding:15px; border-radius:6px; margin-bottom:10px; font-weight:bold; border-left: 5px solid #d9534f; background: #fff5f5; color: #d9534f; }
+    #loginOverlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); display:flex; justify-content:center; align-items:center; z-index:1000; }
+    .report-box { margin-top:15px; padding:15px; background:#eef9fe; border-radius:5px; border: 1px solid #bce5f7; }
+    .security-input { width: 200px; margin-right: 10px; }
+</style>
+</head>
+<body>
+
+<div id="loginOverlay">
+  <div id="loginBox" style="background:white; padding:40px; border-radius:12px; width:350px; text-align:center;">
+    <h2>Hospital Login</h2>
+    <p>Default PIN: <b>1234</b></p>
+    <select id="userSelect" style="width:100%; margin-bottom: 10px;"></select>
+    <input type="password" id="passCode" placeholder="Enter PIN" style="width:93%">
+    <button onclick="handleLogin()" style="width:100%; margin-top:15px;">Login</button>
+  </div>
+
+  <div id="otpBox" class="hidden" style="background:white; padding:40px; border-radius:12px; width:350px; text-align:center;">
+    <h2>First Time Login</h2>
+    <p>Set your private PIN to continue.</p>
+    <input type="password" id="newFirstPin" placeholder="New PIN" style="width:93%">
+    <input type="password" id="confirmFirstPin" placeholder="Confirm PIN" style="width:93%; margin-top:10px;">
+    <button onclick="saveFirstPin()" style="background:#28a745; width:100%; margin-top:15px;">Save & Enter</button>
+  </div>
+</div>
+
+<div class="container hidden" id="dashboard">
+  <div class="admin-bar">
+    <div><strong id="welcome"></strong> | <span id="roleTag"></span></div>
+    <button onclick="logout()" style="background:#dc3545">Logout</button>
+  </div>
+
+  <div id="alertCards" class="section hidden"></div>
+
+  <div class="section">
+    <h3>Hospital Management Report</h3>
+    <div id="genBtnContainer" class="hidden">
+        <button onclick="generateReport()" style="background:#17a2b8; margin-bottom:10px;">Generate New Report</button>
+    </div>
+    <div id="reportDisplay" class="report-box"></div>
+  </div>
+
+  <div class="section" id="staffSection">
+    <h3>Staff List</h3>
+    <div id="staffControls" class="hidden">
+        <input placeholder="Name" id="s_name">
+        <select id="s_role">
+            <option value="Official 1">Official 1 (Reports/Inventory)</option>
+            <option value="Official 2">Official 2 (Staff Manager)</option>
+            <option value="Member">Member</option>
+        </select>
+        <button onclick="addStaff()" style="background:#28a745">Add Personnel</button>
+    </div>
+    <table id="staffTable"></table>
+  </div>
+
+  <div class="section" id="inventorySection">
+    <h3>Inventory Inventory</h3>
+    <div id="invControls" class="hidden">
+        <input placeholder="Item Name" id="i_name">
+        <input type="number" placeholder="Qty" id="i_qty">
+        <input type="date" id="i_expiry">
+        <button onclick="addItem()">Update Inventory</button>
+    </div>
+    <table id="inventoryTable"></table>
+  </div>
+
+  <div class="section">
+    <h3>My Security Settings</h3>
+    <p>Update your personal login PIN:</p>
+    <input type="password" id="changePinInput" class="security-input" placeholder="New 4-digit PIN">
+    <button onclick="updateUserPin()" style="background:#6c757d">Update PIN</button>
+  </div>
+
+  <div class="section hidden" id="takeoverSection" style="border: 2px solid #ffc107; background: #fffcf0;">
+    <h3>Management Handover</h3>
+    <p>Assign a new Chief Admin. <b>Warning:</b> You will lose your Admin rights.</p>
+    <select id="takeoverSelect"></select>
+    <button onclick="handleTakeover()" style="background:#ffc107; color:black;">Confirm Handover</button>
+  </div>
+</div>
+
+<script>
+let users = JSON.parse(localStorage.getItem("hosp_users") || "[]");
+let inventory = JSON.parse(localStorage.getItem("hosp_inv") || "[]");
+let lastReport = JSON.parse(localStorage.getItem("hosp_last_report") || "null");
+
+// Initialize Ibrahim
+if(users.length === 0) {
+    users.push({name: "Ibrahim", role: "Chief Admin", pin: "1234", isOTP: true});
+    saveUsers();
+}
+
+let currentUser = null;
+
+function initLogin() {
+    document.getElementById("userSelect").innerHTML = users.map(u => `<option value="${u.name}">${u.name}</option>`).join('');
+}
+initLogin();
+
+function handleLogin() {
+    const name = document.getElementById("userSelect").value;
+    const pin = document.getElementById("passCode").value;
+    const user = users.find(u => u.name === name);
+    if(user && user.pin === pin) {
+        currentUser = user;
+        if(user.isOTP) {
+            document.getElementById("loginBox").classList.add("hidden");
+            document.getElementById("otpBox").classList.remove("hidden");
+        } else { loginSuccess(); }
+    } else { alert("Incorrect PIN"); }
+}
+
+function saveFirstPin() {
+    const p1 = document.getElementById("newFirstPin").value;
+    if(p1 === document.getElementById("confirmFirstPin").value && p1.length >= 4) {
+        updateUserData(currentUser.name, {pin: p1, isOTP: false});
+        document.getElementById("otpBox").classList.add("hidden");
+        loginSuccess();
+    } else { alert("PINs must match and be at least 4 digits."); }
+}
+
+function loginSuccess() {
+    document.getElementById("loginOverlay").style.display = "none";
+    document.getElementById("dashboard").classList.remove("hidden");
+    document.getElementById("welcome").innerText = `User: ${currentUser.name}`;
+    document.getElementById("roleTag").innerText = `Role: ${currentUser.role}`;
+    applyPermissions();
+    renderAll();
+    renderReport();
+}
+
+function applyPermissions() {
+    const r = currentUser.role;
+    if(r === "Chief Admin" || r === "Official 1") {
+        document.getElementById("genBtnContainer").classList.remove("hidden");
+        document.getElementById("invControls").classList.remove("hidden");
+    }
+    if(r === "Chief Admin" || r === "Official 2") {
+        document.getElementById("staffControls").classList.remove("hidden");
+    }
+    if(r === "Chief Admin") document.getElementById("takeoverSection").classList.remove("hidden");
+}
+
+// PIN UPDATE LOGIC
+function updateUserPin() {
+    const newPin = document.getElementById("changePinInput").value;
+    if(newPin.length < 4) return alert("PIN must be at least 4 digits.");
+    
+    updateUserData(currentUser.name, {pin: newPin});
+    alert("PIN updated successfully! Use your new PIN next time you log in.");
+    document.getElementById("changePinInput").value = "";
+}
+
+function updateUserData(name, data) {
+    users = users.map(u => u.name === name ? {...u, ...data} : u);
+    currentUser = users.find(u => u.name === name); // Refresh current user object
+    saveUsers();
+}
+
+function generateReport() {
+    const low = inventory.filter(i => i.qty < 20).length;
+    const exp = inventory.filter(i => i.exp && i.exp < new Date().toISOString().split('T')[0]).length;
+    
+    lastReport = {
+        by: currentUser.name,
+        role: currentUser.role,
+        time: new Date().toLocaleString(),
+        staff: users.length,
+        items: inventory.length,
+        low, exp
+    };
+    localStorage.setItem("hosp_last_report", JSON.stringify(lastReport));
+    renderReport();
+}
+
+function renderReport() {
+    const display = document.getElementById("reportDisplay");
+    if(!lastReport) {
+        display.innerHTML = "No reports generated yet.";
+        return;
+    }
+    display.innerHTML = `
+        <strong>Latest Hospital Status</strong><br>
+        <small>Generated by: ${lastReport.by} (${lastReport.role}) on ${lastReport.time}</small>
+        <p>Total Personnel: ${lastReport.staff} | Total Items: ${lastReport.items}</p>
+        <p style="color:#d9534f">⚠️ Low Stock: ${lastReport.low} | 🛑 Expired: ${lastReport.exp}</p>
+    `;
+}
+
+function renderAll() {
+    let sHtml = `<tr><th>Name</th><th>Role</th><th>Status</th><th>Actions</th></tr>`;
+    users.forEach(u => {
+        sHtml += `<tr><td>${u.name}</td><td>${u.role}</td><td>${u.isOTP?'Pending OTP':'Active'}</td>
+        <td>${(currentUser.role==='Chief Admin'&&u.name!==currentUser.name)?`<button onclick="delStaff('${u.name}')" style="background:red">Remove</button>`:'-'}</td></tr>`;
+    });
+    document.getElementById("staffTable").innerHTML = sHtml;
+
+    let iHtml = `<tr><th>Item</th><th>Qty</th><th>Expiry</th><th>Actions</th></tr>`;
+    inventory.forEach((item, i) => {
+        iHtml += `<tr><td>${item.name}</td><td>${item.qty}</td><td>${item.exp||'N/A'}</td>
+        <td>${(currentUser.role==='Chief Admin'||currentUser.role==='Official 1')?`<button onclick="delItem(${i})">Delete</button>`:'-'}</td></tr>`;
+    });
+    document.getElementById("inventoryTable").innerHTML = iHtml;
+
+    document.getElementById("takeoverSelect").innerHTML = users.filter(u => u.name !== currentUser.name)
+        .map(u => `<option value="${u.name}">${u.name}</option>`).join('');
+}
+
+function addStaff() {
+    const n = document.getElementById("s_name").value;
+    if(!n) return;
+    users.push({name:n, role:document.getElementById("s_role").value, pin:"1234", isOTP:true});
+    saveUsers(); renderAll();
+}
+
+function addItem() {
+    const n = document.getElementById("i_name").value;
+    const q = parseInt(document.getElementById("i_qty").value);
+    if(n && q) {
+        inventory.push({name:n, qty:q, exp:document.getElementById("i_expiry").value});
+        saveInventory(); renderAll();
+    }
+}
+
+function delStaff(n) { users = users.filter(u=>u.name!==n); saveUsers(); renderAll(); }
+function delItem(i) { inventory.splice(i,1); saveInventory(); renderAll(); }
+
+function handleTakeover() {
+    const target = document.getElementById("takeoverSelect").value;
+    users = users.map(u => {
+        if(u.name === currentUser.name) u.role = "Member";
+        if(u.name === target) u.role = "Chief Admin";
+        return u;
+    });
+    saveUsers(); logout();
+}
+
+function saveUsers() { localStorage.setItem("hosp_users", JSON.stringify(users)); }
+function saveInventory() { localStorage.setItem("hosp_inv", JSON.stringify(inventory)); }
+function logout() { location.reload(); }
+</script>
+</body>
+</html>
