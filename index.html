@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hospital HQ - Final Version</title>
+    <title>Hospital HQ - Role Restricted</title>
     <style>
         :root {
             --bg: #f4f7f6; --card: #ffffff; --text: #333;
@@ -17,11 +17,11 @@
         body { margin: 0; font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); transition: 0.3s; }
         .container { max-width: 1100px; margin: 20px auto; padding: 0 15px; }
 
-        /* Auth */
+        /* Auth UI */
         #loginOverlay { position: fixed; inset: 0; background: rgba(0,0,0,0.95); display: flex; justify-content: center; align-items: center; z-index: 1000; }
-        .auth-card { background: var(--card); padding: 40px; border-radius: 15px; width: 350px; text-align: center; }
+        .auth-card { background: var(--card); padding: 40px; border-radius: 15px; width: 350px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
         input, select { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid var(--border); background: var(--card); color: var(--text); box-sizing: border-box; }
-        button { width: 100%; padding: 12px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; color: white; }
+        button { width: 100%; padding: 12px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.2s; color: white; }
 
         /* Dashboard */
         .admin-bar { background: #2c3e50; color: white; padding: 15px 20px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
@@ -41,9 +41,10 @@
         .badge.ChiefAdmin { background: var(--admin); }
         .badge.Official1 { background: #457b9d; }
         .badge.Official2 { background: #2a9d8f; }
+        .badge.Member { background: #6c757d; }
 
         .control-group { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
-        .btn-small { width: auto; padding: 6px 12px; margin: 0; font-size: 12px; }
+        .btn-small { width: auto; padding: 8px 15px; margin: 0; }
     </style>
 </head>
 <body>
@@ -75,48 +76,48 @@
     <div id="alertArea"></div>
 
     <div class="section hidden" id="reportSection">
-        <h3>📊 Status Report</h3>
-        <button style="background:var(--primary); width:auto;" onclick="generateReport()">Generate Report</button>
+        <h3>📊 Hospital Status Report</h3>
+        <button style="background:var(--primary); width:auto;" onclick="generateReport()">Generate Live Report</button>
         <div id="reportOutput" style="margin-top:10px; font-style:italic;"></div>
     </div>
 
-    <div class="section hidden" id="inventorySection">
-        <h3>📦 Inventory Management</h3>
+    <div class="section" id="inventorySection">
+        <h3>📦 Inventory Items</h3>
         <div id="invControls" class="control-group hidden">
             <input id="itemName" placeholder="Item Name">
-            <input id="itemQty" type="number" placeholder="Add/Sub Qty">
+            <input id="itemQty" type="number" placeholder="Qty">
             <input id="itemExp" type="date">
-            <button style="background:var(--success); width:auto;" onclick="updateInventory()">Update Stock</button>
+            <button style="background:var(--success); width:auto;" onclick="updateInventory()">Add/Update Stock</button>
         </div>
         <table id="inventoryTable"></table>
     </div>
 
-    <div class="section hidden" id="staffSection">
-        <h3>👥 Personnel Management</h3>
+    <div class="section" id="staffSection">
+        <h3>👥 Personnel List</h3>
         <div id="staffControls" class="control-group hidden">
             <input id="sName" placeholder="Staff Name">
             <select id="sRole">
-                <option value="Official 1">Official 1 (Inventory)</option>
-                <option value="Official 2">Official 2 (Staff)</option>
+                <option value="Official 1">Official 1</option>
+                <option value="Official 2">Official 2</option>
                 <option value="Member">Member</option>
             </select>
-            <button style="background:var(--primary); width:auto;" onclick="addStaff()">Add</button>
+            <button style="background:var(--primary); width:auto;" onclick="addStaff()">Register Staff</button>
         </div>
         <table id="staffTable"></table>
     </div>
 
     <div class="section hidden" id="takeoverSection">
-        <h3>👑 Leadership Handover</h3>
+        <h3>👑 Management Handover</h3>
         <div class="control-group">
             <select id="takeoverSelect"></select>
-            <button style="background:var(--warning); color:black; width:auto;" onclick="transferOwnership()">Transfer Admin Rights</button>
+            <button style="background:var(--warning); color:black; width:auto;" onclick="transferOwnership()">Transfer Admin</button>
         </div>
     </div>
 </div>
 
 <script>
-    let users = JSON.parse(localStorage.getItem("hosp_final_u") || "[]");
-    let inventory = JSON.parse(localStorage.getItem("hosp_final_i") || "[]");
+    let users = JSON.parse(localStorage.getItem("hosp_final_v4_u") || "[]");
+    let inventory = JSON.parse(localStorage.getItem("hosp_final_v4_i") || "[]");
     let sessionUser = null;
 
     if (users.length === 0) {
@@ -125,8 +126,8 @@
     }
 
     function saveDB() {
-        localStorage.setItem("hosp_final_u", JSON.stringify(users));
-        localStorage.setItem("hosp_final_i", JSON.stringify(inventory));
+        localStorage.setItem("hosp_final_v4_u", JSON.stringify(users));
+        localStorage.setItem("hosp_final_v4_i", JSON.stringify(inventory));
         document.getElementById("userSelect").innerHTML = users.map(u => `<option value="${u.name}">${u.name}</option>`).join('');
     }
     saveDB();
@@ -144,7 +145,7 @@
         if (p1 === document.getElementById("newPin2").value && p1.length >= 4) {
             users = users.map(u => u.name === sessionUser.name ? {...u, pin: p1, isOTP: false} : u);
             saveDB(); startDashboard();
-        } else alert("Error in PIN setup");
+        } else alert("PIN Error");
     }
 
     function startDashboard() {
@@ -158,98 +159,102 @@
 
     function renderUI() {
         const r = sessionUser.role;
+        
+        // Hide/Show Controls based on TOP OFFICIAL status
         if (["Chief Admin", "Official 1"].includes(r)) {
-            document.getElementById("inventorySection").classList.remove("hidden");
             document.getElementById("invControls").classList.remove("hidden");
             document.getElementById("reportSection").classList.remove("hidden");
         }
         if (["Chief Admin", "Official 2"].includes(r)) {
-            document.getElementById("staffSection").classList.remove("hidden");
             document.getElementById("staffControls").classList.remove("hidden");
         }
-        if (r === "Chief Admin") document.getElementById("takeoverSection").classList.remove("hidden");
+        if (r === "Chief Admin") {
+            document.getElementById("takeoverSection").classList.remove("hidden");
+        }
+
         renderInventory();
         renderStaff();
         checkAlerts();
     }
 
-    // --- SMART INVENTORY LOGIC ---
+    // --- Inventory ---
     function updateInventory() {
         const name = document.getElementById("itemName").value;
         const qty = parseInt(document.getElementById("itemQty").value);
         const exp = document.getElementById("itemExp").value;
-        if(!name || isNaN(qty) || !exp) return alert("Fill all inventory details");
+        if(!name || isNaN(qty) || !exp) return alert("Fill all details");
 
         const existing = inventory.find(i => i.name.toLowerCase() === name.toLowerCase());
-        if(existing) {
-            existing.qty += qty; // Updates existing instead of duplicating
-            existing.exp = exp;  // Updates expiry date
-        } else {
-            inventory.push({name, qty, exp});
-        }
+        if(existing) { existing.qty += qty; existing.exp = exp; }
+        else { inventory.push({name, qty, exp}); }
         saveDB(); renderInventory(); checkAlerts();
     }
 
-    function removeInventoryItem(index) {
-        if(confirm("Permanently delete this item record?")) {
-            inventory.splice(index, 1);
-            saveDB(); renderInventory(); checkAlerts();
-        }
+    function deleteItem(idx) {
+        if(confirm("Remove item?")) { inventory.splice(idx, 1); saveDB(); renderInventory(); checkAlerts(); }
     }
 
     function renderInventory() {
-        let html = `<tr><th>Item</th><th>Qty</th><th>Expiry</th><th>Actions</th></tr>`;
+        let html = `<tr><th>Item</th><th>Qty</th><th>Expiry</th><th>Action</th></tr>`;
         const today = new Date().toISOString().split('T')[0];
+        const canEdit = ["Chief Admin", "Official 1"].includes(sessionUser.role);
+
         inventory.forEach((i, idx) => {
-            const isOutdated = i.exp < today;
-            const style = isOutdated ? 'color:var(--danger); font-weight:bold;' : (i.qty < 5 ? 'color:var(--warning);' : '');
-            html += `<tr style="${style}">
-                <td>${i.name} ${isOutdated ? '(EXPIRED)' : ''}</td>
+            const expired = i.exp < today;
+            html += `<tr style="${expired ? 'color:red;font-weight:bold' : ''}">
+                <td>${i.name} ${expired ? '(EXPIRED)' : ''}</td>
                 <td>${i.qty}</td>
                 <td>${i.exp}</td>
-                <td><button class="btn-small" style="background:var(--danger)" onclick="removeInventoryItem(${idx})">Delete</button></td>
+                <td>${canEdit ? `<button class="btn-small" style="background:var(--danger)" onclick="deleteItem(${idx})">Del</button>` : '-'}</td>
             </tr>`;
         });
         document.getElementById("inventoryTable").innerHTML = html;
     }
 
-    function checkAlerts() {
-        const today = new Date().toISOString().split('T')[0];
-        const expired = inventory.filter(i => i.exp < today);
-        const low = inventory.filter(i => i.qty < 5 && i.exp >= today);
-        let alertHtml = "";
-        if(expired.length > 0) alertHtml += `<div class="alert-box alert-danger">🚨 ${expired.length} Items Expired! Remove them immediately.</div>`;
-        if(low.length > 0) alertHtml += `<div class="alert-box alert-warning">⚠️ ${low.length} Items are critically low (<5).</div>`;
-        document.getElementById("alertArea").innerHTML = alertHtml;
-    }
-
-    function generateReport() {
-        const total = inventory.reduce((acc, curr) => acc + curr.qty, 0);
-        document.getElementById("reportOutput").innerHTML = `Stock: ${total} units | Personnel: ${users.length} | Generated: ${new Date().toLocaleTimeString()}`;
-    }
-
-    // --- STAFF & HANDOVER ---
+    // --- Staff ---
     function addStaff() {
         const n = document.getElementById("sName").value;
         const r = document.getElementById("sRole").value;
         if(n) { users.push({name: n, role: r, pin: "1234", isOTP: true}); saveDB(); renderStaff(); }
     }
 
+    function delStaff(name) {
+        if(confirm("Delete staff?")) { users = users.filter(u => u.name !== name); saveDB(); renderStaff(); }
+    }
+
     function renderStaff() {
         let html = `<tr><th>Name</th><th>Role</th><th>Action</th></tr>`;
+        const canEdit = ["Chief Admin", "Official 2"].includes(sessionUser.role);
+
         users.forEach(u => {
-            const canDel = (sessionUser.role === "Chief Admin" && u.name !== sessionUser.name);
-            html += `<tr><td>${u.name}</td><td>${u.role}</td><td>${canDel ? `<button class="btn-small" style="background:var(--danger)" onclick="removeStaff('${u.name}')">Remove</button>` : '-'}</td></tr>`;
+            const isSelf = u.name === sessionUser.name;
+            const chiefAction = (sessionUser.role === "Chief Admin" && !isSelf);
+            html += `<tr><td>${u.name}</td><td><span class="badge ${u.role.replace(/\s+/g, '')}">${u.role}</span></td>
+            <td>${chiefAction ? `<button class="btn-small" style="background:var(--danger)" onclick="delStaff('${u.name}')">Remove</button>` : '-'}</td></tr>`;
         });
         document.getElementById("staffTable").innerHTML = html;
         document.getElementById("takeoverSelect").innerHTML = users.filter(u => u.name !== sessionUser.name).map(u => `<option value="${u.name}">${u.name}</option>`).join('');
     }
 
-    function removeStaff(n) { if(confirm(`Remove ${n}?`)) { users = users.filter(u => u.name !== n); saveDB(); renderStaff(); }}
+    // --- System ---
+    function checkAlerts() {
+        const today = new Date().toISOString().split('T')[0];
+        const expired = inventory.filter(i => i.exp < today);
+        const low = inventory.filter(i => i.qty < 5 && i.exp >= today);
+        let h = "";
+        if(expired.length > 0) h += `<div class="alert-box alert-danger">🚨 ${expired.length} Items Expired! Check inventory table.</div>`;
+        if(low.length > 0) h += `<div class="alert-box alert-warning">⚠️ ${low.length} Items are low in stock.</div>`;
+        document.getElementById("alertArea").innerHTML = h;
+    }
+
+    function generateReport() {
+        const total = inventory.reduce((a, b) => a + b.qty, 0);
+        document.getElementById("reportOutput").innerHTML = `Total Stock: ${total} | Total Staff: ${users.length} | Time: ${new Date().toLocaleTimeString()}`;
+    }
 
     function transferOwnership() {
         const t = document.getElementById("takeoverSelect").value;
-        if(confirm(`Transfer Leadership to ${t}?`)) {
+        if(confirm(`Promote ${t} to Chief Admin?`)) {
             users = users.map(u => {
                 if (u.name === sessionUser.name) u.role = "Member";
                 if (u.name === t) u.role = "Chief Admin";
