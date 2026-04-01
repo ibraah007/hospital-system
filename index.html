@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hospital HQ - Advanced Management System</title>
+    <title>Hospital HQ - Final Version</title>
     <style>
         :root {
             --bg: #f4f7f6; --card: #ffffff; --text: #333;
@@ -17,13 +17,13 @@
         body { margin: 0; font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); transition: 0.3s; }
         .container { max-width: 1100px; margin: 20px auto; padding: 0 15px; }
 
-        /* Auth UI */
+        /* Auth */
         #loginOverlay { position: fixed; inset: 0; background: rgba(0,0,0,0.95); display: flex; justify-content: center; align-items: center; z-index: 1000; }
-        .auth-card { background: var(--card); padding: 40px; border-radius: 15px; width: 350px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .auth-card { background: var(--card); padding: 40px; border-radius: 15px; width: 350px; text-align: center; }
         input, select { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid var(--border); background: var(--card); color: var(--text); box-sizing: border-box; }
-        button { width: 100%; padding: 12px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.2s; color: white; }
+        button { width: 100%; padding: 12px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; color: white; }
 
-        /* Dashboard UI */
+        /* Dashboard */
         .admin-bar { background: #2c3e50; color: white; padding: 15px 20px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
         .section { background: var(--card); padding: 25px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 25px; }
         .hidden { display: none !important; }
@@ -37,14 +37,13 @@
         table { width: 100%; border-collapse: collapse; margin-top: 15px; }
         th, td { padding: 12px; text-align: left; border-bottom: 1px solid var(--border); }
         th { background: rgba(0,0,0,0.05); }
-        .badge { padding: 4px 8px; border-radius: 5px; font-size: 11px; font-weight: bold; }
-        .badge.ChiefAdmin { background: var(--admin); color: white; }
-        .badge.Official1 { background: #457b9d; color: white; }
-        .badge.Official2 { background: #2a9d8f; color: white; }
+        .badge { padding: 4px 8px; border-radius: 5px; font-size: 11px; font-weight: bold; color: white;}
+        .badge.ChiefAdmin { background: var(--admin); }
+        .badge.Official1 { background: #457b9d; }
+        .badge.Official2 { background: #2a9d8f; }
 
         .control-group { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
-        .control-group input, .control-group select { flex: 1; min-width: 120px; }
-        .btn-action { width: auto; padding: 10px 20px; margin: 0; }
+        .btn-small { width: auto; padding: 6px 12px; margin: 0; font-size: 12px; }
     </style>
 </head>
 <body>
@@ -58,7 +57,6 @@
     </div>
     <div class="auth-card hidden" id="otpBox">
         <h2>Security Setup</h2>
-        <p>Set your private 4-digit PIN</p>
         <input type="password" id="newPin1" placeholder="New PIN">
         <input type="password" id="newPin2" placeholder="Confirm PIN">
         <button style="background:var(--success)" onclick="saveFirstPin()">Complete Setup</button>
@@ -69,58 +67,56 @@
     <div class="admin-bar">
         <div><strong id="userName"></strong> | <span id="userRole"></span></div>
         <div style="display:flex; gap:10px;">
-            <button class="btn-action" style="background:#6c757d" onclick="document.body.classList.toggle('dark')">Theme</button>
-            <button class="btn-action" style="background:var(--danger)" onclick="logout()">Logout</button>
+            <button class="btn-small" style="background:#6c757d" onclick="document.body.classList.toggle('dark')">Theme</button>
+            <button class="btn-small" style="background:var(--danger)" onclick="logout()">Logout</button>
         </div>
     </div>
 
     <div id="alertArea"></div>
 
     <div class="section hidden" id="reportSection">
-        <h3>📊 Hospital Status Report</h3>
-        <button class="btn-action" style="background:var(--primary)" onclick="generateReport()">Generate Live Report</button>
-        <div id="reportOutput" style="margin-top:15px; padding:15px; background:rgba(0,0,0,0.03); border-radius:8px;">
-            Click to see stock and staff statistics.
-        </div>
+        <h3>📊 Status Report</h3>
+        <button style="background:var(--primary); width:auto;" onclick="generateReport()">Generate Report</button>
+        <div id="reportOutput" style="margin-top:10px; font-style:italic;"></div>
     </div>
 
     <div class="section hidden" id="inventorySection">
-        <h3>📦 Inventory & Stock</h3>
+        <h3>📦 Inventory Management</h3>
         <div id="invControls" class="control-group hidden">
             <input id="itemName" placeholder="Item Name">
-            <input id="itemQty" type="number" placeholder="Qty">
-            <input id="itemExp" type="date" title="Expiry Date">
-            <button class="btn-action" style="background:var(--success)" onclick="addInventory()">Update</button>
+            <input id="itemQty" type="number" placeholder="Add/Sub Qty">
+            <input id="itemExp" type="date">
+            <button style="background:var(--success); width:auto;" onclick="updateInventory()">Update Stock</button>
         </div>
         <table id="inventoryTable"></table>
     </div>
 
     <div class="section hidden" id="staffSection">
-        <h3>👥 Staff Management</h3>
+        <h3>👥 Personnel Management</h3>
         <div id="staffControls" class="control-group hidden">
-            <input id="sName" placeholder="Name">
+            <input id="sName" placeholder="Staff Name">
             <select id="sRole">
-                <option value="Official 1">Official 1 (Inventory/Reports)</option>
+                <option value="Official 1">Official 1 (Inventory)</option>
                 <option value="Official 2">Official 2 (Staff)</option>
                 <option value="Member">Member</option>
             </select>
-            <button class="btn-action" style="background:var(--primary)" onclick="addStaff()">Add</button>
+            <button style="background:var(--primary); width:auto;" onclick="addStaff()">Add</button>
         </div>
         <table id="staffTable"></table>
     </div>
 
     <div class="section hidden" id="takeoverSection">
-        <h3>👑 Ownership Handover</h3>
+        <h3>👑 Leadership Handover</h3>
         <div class="control-group">
             <select id="takeoverSelect"></select>
-            <button class="btn-action" style="background:var(--warning); color:black" onclick="transferOwnership()">Transfer Leadership</button>
+            <button style="background:var(--warning); color:black; width:auto;" onclick="transferOwnership()">Transfer Admin Rights</button>
         </div>
     </div>
 </div>
 
 <script>
-    let users = JSON.parse(localStorage.getItem("hosp_v3_users") || "[]");
-    let inventory = JSON.parse(localStorage.getItem("hosp_v3_inv") || "[]");
+    let users = JSON.parse(localStorage.getItem("hosp_final_u") || "[]");
+    let inventory = JSON.parse(localStorage.getItem("hosp_final_i") || "[]");
     let sessionUser = null;
 
     if (users.length === 0) {
@@ -129,16 +125,14 @@
     }
 
     function saveDB() {
-        localStorage.setItem("hosp_v3_users", JSON.stringify(users));
-        localStorage.setItem("hosp_v3_inv", JSON.stringify(inventory));
+        localStorage.setItem("hosp_final_u", JSON.stringify(users));
+        localStorage.setItem("hosp_final_i", JSON.stringify(inventory));
         document.getElementById("userSelect").innerHTML = users.map(u => `<option value="${u.name}">${u.name}</option>`).join('');
     }
     saveDB();
 
     function handleLogin() {
-        const name = document.getElementById("userSelect").value;
-        const pin = document.getElementById("passCode").value;
-        const u = users.find(user => user.name === name && user.pin === pin);
+        const u = users.find(user => user.name === document.getElementById("userSelect").value && user.pin === document.getElementById("passCode").value);
         if (u) {
             sessionUser = u;
             u.isOTP ? (document.getElementById("loginBox").classList.add("hidden"), document.getElementById("otpBox").classList.remove("hidden")) : startDashboard();
@@ -147,11 +141,10 @@
 
     function saveFirstPin() {
         const p1 = document.getElementById("newPin1").value;
-        const p2 = document.getElementById("newPin2").value;
-        if (p1 === p2 && p1.length >= 4) {
+        if (p1 === document.getElementById("newPin2").value && p1.length >= 4) {
             users = users.map(u => u.name === sessionUser.name ? {...u, pin: p1, isOTP: false} : u);
             saveDB(); startDashboard();
-        } else alert("PINs must match and be 4+ digits");
+        } else alert("Error in PIN setup");
     }
 
     function startDashboard() {
@@ -165,7 +158,6 @@
 
     function renderUI() {
         const r = sessionUser.role;
-        // Roles: Official 1 (Inv/Reports), Official 2 (Staff), Chief Admin (All)
         if (["Chief Admin", "Official 1"].includes(r)) {
             document.getElementById("inventorySection").classList.remove("hidden");
             document.getElementById("invControls").classList.remove("hidden");
@@ -176,30 +168,47 @@
             document.getElementById("staffControls").classList.remove("hidden");
         }
         if (r === "Chief Admin") document.getElementById("takeoverSection").classList.remove("hidden");
-
         renderInventory();
         renderStaff();
         checkAlerts();
     }
 
-    // --- Inventory & Outdated Tracking ---
-    function addInventory() {
+    // --- SMART INVENTORY LOGIC ---
+    function updateInventory() {
         const name = document.getElementById("itemName").value;
         const qty = parseInt(document.getElementById("itemQty").value);
         const exp = document.getElementById("itemExp").value;
-        if(!name || isNaN(qty) || !exp) return alert("Fill all inventory fields!");
+        if(!name || isNaN(qty) || !exp) return alert("Fill all inventory details");
 
-        inventory.push({name, qty, exp});
+        const existing = inventory.find(i => i.name.toLowerCase() === name.toLowerCase());
+        if(existing) {
+            existing.qty += qty; // Updates existing instead of duplicating
+            existing.exp = exp;  // Updates expiry date
+        } else {
+            inventory.push({name, qty, exp});
+        }
         saveDB(); renderInventory(); checkAlerts();
     }
 
+    function removeInventoryItem(index) {
+        if(confirm("Permanently delete this item record?")) {
+            inventory.splice(index, 1);
+            saveDB(); renderInventory(); checkAlerts();
+        }
+    }
+
     function renderInventory() {
-        let html = `<tr><th>Item</th><th>Qty</th><th>Expiry</th><th>Status</th></tr>`;
+        let html = `<tr><th>Item</th><th>Qty</th><th>Expiry</th><th>Actions</th></tr>`;
         const today = new Date().toISOString().split('T')[0];
-        inventory.forEach(i => {
+        inventory.forEach((i, idx) => {
             const isOutdated = i.exp < today;
-            const status = isOutdated ? `<b style="color:var(--danger)">OUTDATED</b>` : (i.qty < 10 ? `<b style="color:var(--warning)">LOW</b>` : `OK`);
-            html += `<tr><td>${i.name}</td><td>${i.qty}</td><td>${i.exp}</td><td>${status}</td></tr>`;
+            const style = isOutdated ? 'color:var(--danger); font-weight:bold;' : (i.qty < 5 ? 'color:var(--warning);' : '');
+            html += `<tr style="${style}">
+                <td>${i.name} ${isOutdated ? '(EXPIRED)' : ''}</td>
+                <td>${i.qty}</td>
+                <td>${i.exp}</td>
+                <td><button class="btn-small" style="background:var(--danger)" onclick="removeInventoryItem(${idx})">Delete</button></td>
+            </tr>`;
         });
         document.getElementById("inventoryTable").innerHTML = html;
     }
@@ -207,54 +216,40 @@
     function checkAlerts() {
         const today = new Date().toISOString().split('T')[0];
         const expired = inventory.filter(i => i.exp < today);
-        const low = inventory.filter(i => i.qty < 10 && i.exp >= today);
-        
+        const low = inventory.filter(i => i.qty < 5 && i.exp >= today);
         let alertHtml = "";
-        if(expired.length > 0) alertHtml += `<div class="alert-box alert-danger">🚨 CRITICAL: ${expired.length} items are OUTDATED/EXPIRED!</div>`;
-        if(low.length > 0) alertHtml += `<div class="alert-box alert-warning">⚠️ WARNING: ${low.length} items are LOW on stock!</div>`;
+        if(expired.length > 0) alertHtml += `<div class="alert-box alert-danger">🚨 ${expired.length} Items Expired! Remove them immediately.</div>`;
+        if(low.length > 0) alertHtml += `<div class="alert-box alert-warning">⚠️ ${low.length} Items are critically low (<5).</div>`;
         document.getElementById("alertArea").innerHTML = alertHtml;
     }
 
-    // --- Reports ---
     function generateReport() {
-        const today = new Date().toISOString().split('T')[0];
-        const outdated = inventory.filter(i => i.exp < today).length;
-        const totalItems = inventory.reduce((acc, curr) => acc + curr.qty, 0);
-        
-        document.getElementById("reportOutput").innerHTML = `
-            <strong>Generated by:</strong> ${sessionUser.name} <br>
-            <strong>Total Personnel:</strong> ${users.length} <br>
-            <strong>Total Inventory Stock:</strong> ${totalItems} units <br>
-            <strong>Outdated Items to Dispose:</strong> ${outdated} <br>
-            <strong>Report Time:</strong> ${new Date().toLocaleString()}
-        `;
+        const total = inventory.reduce((acc, curr) => acc + curr.qty, 0);
+        document.getElementById("reportOutput").innerHTML = `Stock: ${total} units | Personnel: ${users.length} | Generated: ${new Date().toLocaleTimeString()}`;
     }
 
-    // --- Staff Logic ---
+    // --- STAFF & HANDOVER ---
     function addStaff() {
         const n = document.getElementById("sName").value;
         const r = document.getElementById("sRole").value;
-        if(!n) return;
-        users.push({name: n, role: r, pin: "1234", isOTP: true});
-        saveDB(); renderStaff();
+        if(n) { users.push({name: n, role: r, pin: "1234", isOTP: true}); saveDB(); renderStaff(); }
     }
 
     function renderStaff() {
-        let html = `<tr><th>Name</th><th>Role</th><th>Actions</th></tr>`;
+        let html = `<tr><th>Name</th><th>Role</th><th>Action</th></tr>`;
         users.forEach(u => {
-            const canDelete = (sessionUser.role === "Chief Admin" && u.name !== sessionUser.name);
-            html += `<tr><td>${u.name}</td><td><span class="badge ${u.role.replace(/\s+/g, '')}">${u.role}</span></td>
-            <td>${canDelete ? `<button onclick="removeStaff('${u.name}')" style="background:var(--danger); width:auto; padding:5px 10px;">Remove</button>` : '-'}</td></tr>`;
+            const canDel = (sessionUser.role === "Chief Admin" && u.name !== sessionUser.name);
+            html += `<tr><td>${u.name}</td><td>${u.role}</td><td>${canDel ? `<button class="btn-small" style="background:var(--danger)" onclick="removeStaff('${u.name}')">Remove</button>` : '-'}</td></tr>`;
         });
         document.getElementById("staffTable").innerHTML = html;
         document.getElementById("takeoverSelect").innerHTML = users.filter(u => u.name !== sessionUser.name).map(u => `<option value="${u.name}">${u.name}</option>`).join('');
     }
 
-    function removeStaff(n) { if(confirm(`Delete ${n}?`)) { users = users.filter(u => u.name !== n); saveDB(); renderStaff(); }}
+    function removeStaff(n) { if(confirm(`Remove ${n}?`)) { users = users.filter(u => u.name !== n); saveDB(); renderStaff(); }}
 
     function transferOwnership() {
         const t = document.getElementById("takeoverSelect").value;
-        if(confirm(`Promote ${t} to Chief Admin?`)) {
+        if(confirm(`Transfer Leadership to ${t}?`)) {
             users = users.map(u => {
                 if (u.name === sessionUser.name) u.role = "Member";
                 if (u.name === t) u.role = "Chief Admin";
@@ -263,7 +258,6 @@
             saveDB(); logout();
         }
     }
-
     function logout() { location.reload(); }
 </script>
 </body>
