@@ -1,322 +1,277 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Hospital HQ - Dark Mode Dashboard</title>
-<style>
-/* --- General Reset & Fonts --- */
-body { margin:0; padding:0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:#f4f6f8; color:#333; transition: background 0.3s, color 0.3s; }
-.container { max-width:1200px; margin:20px auto; padding:10px; }
-h2,h3 { margin-top:0; }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hospital HQ - Secure Management System</title>
+    <style>
+        :root {
+            --bg: #f4f7f6;
+            --card: #ffffff;
+            --text: #333;
+            --primary: #007bff;
+            --danger: #dc3545;
+            --success: #28a745;
+            --admin: #e63946;
+        }
 
-/* --- Dark Mode --- */
-body.dark { background:#1c1c1c; color:#f0f0f0; }
-body.dark .section { background:#2c2c2c; box-shadow:0 4px 12px rgba(0,0,0,0.5); }
-body.dark table th { background:#3a3a3a; color:#f0f0f0; }
-body.dark table td { border-color:#444; }
-body.dark #loginBox, body.dark #otpBox { background:#2c2c2c; color:#f0f0f0; }
-body.dark input, body.dark select { background:#3a3a3a; color:#f0f0f0; border:1px solid #555; }
-body.dark button { opacity:0.95; }
+        body.dark {
+            --bg: #121212;
+            --card: #1e1e1e;
+            --text: #e0e0e0;
+            --primary: #375a7f;
+        }
 
-/* --- Login Overlay --- */
-#loginOverlay { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); display:flex; justify-content:center; align-items:center; z-index:1000; }
-#loginBox, #otpBox { background:white; padding:40px; border-radius:12px; width:350px; text-align:center; box-shadow:0 6px 15px rgba(0,0,0,0.2); transition: all 0.3s; }
-#loginBox input, #otpBox input, #loginBox select { width:90%; padding:10px; margin:10px 0; border-radius:6px; border:1px solid #ccc; }
-#loginBox button, #otpBox button { width:95%; padding:12px; border:none; border-radius:6px; cursor:pointer; font-weight:bold; transition:0.3s; }
-#loginBox button { background:#007bff; color:white; }
-#loginBox button:hover { background:#0056b3; }
-#otpBox button { background:#28a745; color:white; }
-#otpBox button:hover { background:#218838; }
+        body { margin: 0; font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); transition: 0.3s; }
+        .container { max-width: 1000px; margin: 20px auto; padding: 0 15px; }
 
-/* --- Dashboard --- */
-.admin-bar { background:#2f3e46; color:white; padding:15px 20px; border-radius:10px; display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; box-shadow:0 3px 6px rgba(0,0,0,0.1); }
-.admin-bar button { background:#e63946; padding:10px 15px; border-radius:6px; border:none; cursor:pointer; color:white; font-weight:bold; }
-.admin-bar button:hover { background:#c5303e; }
+        /* Login Overlay */
+        #loginOverlay { position: fixed; inset: 0; background: rgba(0,0,0,0.9); display: flex; justify-content: center; align-items: center; z-index: 1000; }
+        .auth-card { background: var(--card); padding: 40px; border-radius: 15px; width: 350px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        input, select { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid #ddd; box-sizing: border-box; background: var(--card); color: var(--text); }
+        
+        button { width: 100%; padding: 12px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.2s; margin-top: 10px; color: white; }
+        .btn-login { background: var(--primary); }
+        .btn-logout { background: var(--danger); width: auto; padding: 8px 15px; }
+        .btn-save { background: var(--success); }
 
-/* --- Dark Mode Toggle --- */
-#themeToggle { background:#007bff; color:white; padding:8px 12px; border-radius:6px; font-weight:bold; cursor:pointer; border:none; margin-left:10px; }
-#themeToggle:hover { background:#0056b3; }
+        /* Dashboard Parts */
+        .admin-bar { background: #2c3e50; color: white; padding: 15px 20px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .section { background: var(--card); padding: 25px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 25px; }
+        .hidden { display: none !important; }
 
-/* --- Sections --- */
-.section { background:white; padding:20px; border-radius:10px; box-shadow:0 4px 12px rgba(0,0,0,0.08); margin-bottom:25px; transition: all 0.3s; }
-.section h3 { margin-bottom:15px; color:#2f3e46; }
-input, select, button { font-size:14px; }
-button { transition:0.3s; }
-button:hover { opacity:0.9; }
-
-/* --- Tables --- */
-table { width:100%; border-collapse:collapse; margin-top:15px; }
-th, td { padding:12px; text-align:left; border-bottom:1px solid #eee; }
-th { background:#f1f3f6; color:#2f3e46; font-weight:600; }
-tr:hover { background:#f9fafb; }
-body.dark tr:hover { background:#3a3a3a; }
-
-/* --- Role Badges --- */
-.badge { padding:4px 8px; border-radius:6px; font-weight:bold; font-size:12px; color:white; }
-.badge.ChiefAdmin { background:#e63946; }
-.badge.Official1 { background:#457b9d; }
-.badge.Official2 { background:#2a9d8f; }
-.badge.Member { background:#6c757d; }
-
-/* --- Alerts --- */
-.alert-card { padding:15px; border-left:5px solid #d9534f; background:#fff5f5; color:#d9534f; font-weight:bold; border-radius:6px; margin-bottom:10px; animation:pulse 1.5s infinite; }
-@keyframes pulse { 0%{box-shadow:0 0 0 0 rgba(217,83,79,0.4);} 70%{box-shadow:0 0 0 15px rgba(217,83,79,0);} 100%{box-shadow:0 0 0 0 rgba(217,83,79,0);} }
-
-/* --- Buttons & Controls --- */
-.control-group { display:flex; flex-wrap:wrap; gap:10px; margin-bottom:10px; }
-.control-group input, .control-group select { flex:1; min-width:150px; }
-.control-group button { flex:none; }
-
-/* --- Report Box --- */
-.report-box { background:#eef9fe; border:1px solid #bce5f7; padding:15px; border-radius:6px; margin-top:10px; }
-body.dark .report-box { background:#2a2a2a; border-color:#3a3a3a; }
-
-/* --- Takeover --- */
-#takeoverSection { border:2px solid #ffc107; background:#fff9e6; padding:20px; border-radius:10px; }
-#takeoverSection button { background:#ffc107; color:#333; font-weight:bold; }
-#takeoverSection button:hover { background:#e6b800; }
-
-/* --- Responsive --- */
-@media(max-width:768px) { .control-group { flex-direction:column; } input, select, button { width:100%; } }
-</style>
+        /* Tables & Badges */
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; }
+        th { background: rgba(0,0,0,0.05); }
+        .badge { padding: 4px 8px; border-radius: 5px; font-size: 11px; font-weight: bold; text-transform: uppercase; }
+        .badge.ChiefAdmin { background: var(--admin); color: white; }
+        .badge.Official1 { background: #457b9d; color: white; }
+        .badge.Official2 { background: #2a9d8f; color: white; }
+        
+        /* Special Sections */
+        #takeoverSection { border: 2px solid #ffc107; background: rgba(255, 193, 7, 0.1); }
+    </style>
 </head>
 <body>
 
-<!-- LOGIN & OTP -->
 <div id="loginOverlay">
-  <div id="loginBox">
-    <h2>Hospital Login</h2>
-    <p>Default PIN: <b>1234</b></p>
-    <select id="userSelect"></select>
-    <input type="password" id="passCode" placeholder="Enter PIN">
-    <button onclick="handleLogin()">Login</button>
-  </div>
-  <div id="otpBox" class="hidden">
-    <h2>First Time Login</h2>
-    <input type="password" id="newFirstPin" placeholder="New PIN">
-    <input type="password" id="confirmFirstPin" placeholder="Confirm PIN">
-    <button onclick="saveFirstPin()">Save & Enter</button>
-  </div>
+    <div class="auth-card" id="loginBox">
+        <h2>🏥 Hospital HQ</h2>
+        <p>Login to your account</p>
+        <select id="userSelect"></select>
+        <input type="password" id="passCode" placeholder="Enter PIN">
+        <button class="btn-login" onclick="handleLogin()">Sign In</button>
+    </div>
+
+    <div class="auth-card hidden" id="otpBox">
+        <h2>New Account Setup</h2>
+        <p>Set a secure 4-digit PIN</p>
+        <input type="password" id="newPin1" placeholder="New PIN">
+        <input type="password" id="newPin2" placeholder="Confirm PIN">
+        <button class="btn-save" onclick="saveFirstPin()">Complete Setup</button>
+    </div>
 </div>
 
 <div class="container hidden" id="dashboard">
-  <div class="admin-bar">
-    <div><strong id="welcome"></strong> | <span id="roleTag"></span></div>
-    <div>
-      <button id="themeToggle" onclick="toggleTheme()">Toggle Dark Mode</button>
-      <button onclick="logout()">Logout</button>
+    <div class="admin-bar">
+        <div><strong id="userName"></strong> | <span id="userRole"></span></div>
+        <div style="display:flex; gap:10px;">
+            <button onclick="document.body.classList.toggle('dark')" style="background:#6c757d; width:auto; padding:8px;">Theme</button>
+            <button class="btn-logout" onclick="logout()">Logout</button>
+        </div>
     </div>
-  </div>
 
-  <div id="alertCards" class="section hidden"></div>
-
-  <div class="section">
-    <h3>Reports</h3>
-    <div class="control-group" id="genBtnContainer" class="hidden">
-      <button onclick="generateReport()">Generate New Report</button>
+    <div class="section hidden" id="staffSection">
+        <h3>Staff Management</h3>
+        <div id="staffControls" class="hidden" style="display:flex; gap:10px; margin-bottom:15px;">
+            <input id="newStaffName" placeholder="Staff Name" style="flex:2">
+            <select id="newStaffRole" style="flex:1">
+                <option value="Official 1">Official 1</option>
+                <option value="Official 2">Official 2</option>
+                <option value="Member">Member</option>
+            </select>
+            <button class="btn-save" onclick="addStaff()" style="width:120px; margin:0;">Add</button>
+        </div>
+        <table id="staffTable"></table>
     </div>
-    <div id="reportDisplay" class="report-box"></div>
-  </div>
 
-  <div class="section" id="staffSection">
-    <h3>Staff Management</h3>
-    <div class="control-group" id="staffControls" class="hidden">
-      <input placeholder="Staff Name" id="s_name">
-      <select id="s_role">
-        <option value="Official 1">Official 1 (Reports/Inventory)</option>
-        <option value="Official 2">Official 2 (Staff Manager)</option>
-        <option value="Member">Member</option>
-      </select>
-      <button onclick="addStaff()">Add Personnel</button>
+    <div class="section">
+        <h3>Security Settings</h3>
+        <p>Update your access PIN:</p>
+        <div style="display:flex; gap:10px; max-width:400px;">
+            <input type="password" id="changePinInput" placeholder="New PIN">
+            <button class="btn-login" onclick="updatePin()" style="margin:0; width:120px;">Update</button>
+        </div>
     </div>
-    <table id="staffTable"></table>
-  </div>
 
-  <div class="section" id="inventorySection">
-    <h3>Inventory Management</h3>
-    <div class="control-group" id="invControls" class="hidden">
-      <input placeholder="Item Name" id="i_name">
-      <input type="number" placeholder="Qty" id="i_qty">
-      <input type="date" id="i_expiry">
-      <button onclick="addItem()">Update Inventory</button>
+    <div class="section hidden" id="takeoverSection">
+        <h3>Management Handover</h3>
+        <p>Promote a staff member to <b>Chief Admin</b>. This will remove your admin status.</p>
+        <div style="display:flex; gap:10px;">
+            <select id="takeoverSelect" style="flex:1"></select>
+            <button onclick="transferOwnership()" style="background:#ffc107; color:black; width:200px; margin:0;">Transfer Leadership</button>
+        </div>
     </div>
-    <table id="inventoryTable"></table>
-  </div>
-
-  <div class="section">
-    <h3>Security Settings</h3>
-    <div class="control-group">
-      <input type="password" id="changePinInput" placeholder="New 4-digit PIN">
-      <button onclick="updateUserPin()">Update PIN</button>
-    </div>
-  </div>
-
-  <div class="section" id="takeoverSection">
-    <h3>Management Handover</h3>
-    <p>Assign a new Chief Admin. You will lose admin rights.</p>
-    <select id="takeoverSelect"></select>
-    <button onclick="handleTakeover()">Confirm Handover</button>
-  </div>
 </div>
 
 <script>
-// --- User & Inventory Data ---
-let users = JSON.parse(localStorage.getItem("hosp_users") || "[]");
-let inventory = JSON.parse(localStorage.getItem("hosp_inv") || "[]");
-let lastReport = JSON.parse(localStorage.getItem("hosp_last_report") || "null");
+    // --- Data Management ---
+    let users = JSON.parse(localStorage.getItem("hospital_db") || "[]");
+    let sessionUser = null;
 
-// Initialize default admin Ibrahim
-if(users.length===0) {
-  users.push({name:"Ibrahim", role:"Chief Admin", pin:"1234", isOTP:true});
-  saveUsers();
-}
+    if (users.length === 0) {
+        users.push({name: "Ibrahim", role: "Chief Admin", pin: "1234", isOTP: true});
+        saveDB();
+    }
 
-let currentUser = null;
+    function saveDB() {
+        localStorage.setItem("hospital_db", JSON.stringify(users));
+        refreshLoginDropdown();
+    }
 
-// --- Login ---
-function initLogin() {
-  document.getElementById("userSelect").innerHTML = users.map(u=>`<option value="${u.name}">${u.name}</option>`).join('');
-}
-initLogin();
+    function refreshLoginDropdown() {
+        document.getElementById("userSelect").innerHTML = users.map(u => `<option value="${u.name}">${u.name}</option>`).join('');
+    }
+    refreshLoginDropdown();
 
-function handleLogin() {
-  const name = document.getElementById("userSelect").value;
-  const pin = document.getElementById("passCode").value;
-  const user = users.find(u=>u.name===name);
-  if(user && user.pin===pin) {
-    currentUser = user;
-    user.isOTP ? showOTP() : loginSuccess();
-  } else alert("Incorrect PIN");
-}
+    // --- Authentication ---
+    function handleLogin() {
+        const name = document.getElementById("userSelect").value;
+        const pin = document.getElementById("passCode").value;
+        const userFound = users.find(u => u.name === name && u.pin === pin);
 
-function showOTP() {
-  document.getElementById("loginBox").classList.add("hidden");
-  document.getElementById("otpBox").classList.remove("hidden");
-}
+        if (userFound) {
+            sessionUser = userFound;
+            if (userFound.isOTP) {
+                document.getElementById("loginBox").classList.add("hidden");
+                document.getElementById("otpBox").classList.remove("hidden");
+            } else {
+                startDashboard();
+            }
+        } else {
+            alert("❌ Incorrect PIN");
+        }
+    }
 
-function saveFirstPin() {
-  const p1 = document.getElementById("newFirstPin").value;
-  const p2 = document.getElementById("confirmFirstPin").value;
-  if(p1===p2 && p1.length>=4) {
-    updateUserData(currentUser.name, {pin:p1, isOTP:false});
-    document.getElementById("otpBox").classList.add("hidden");
-    loginSuccess();
-  } else alert("PINs must match and be at least 4 digits.");
-}
+    function saveFirstPin() {
+        const p1 = document.getElementById("newPin1").value;
+        const p2 = document.getElementById("newPin2").value;
+        if (p1 === p2 && p1.length >= 4) {
+            updateUserInData(sessionUser.name, { pin: p1, isOTP: false });
+            document.getElementById("otpBox").classList.add("hidden");
+            startDashboard();
+        } else {
+            alert("❌ PINs must match and be 4+ digits");
+        }
+    }
 
-function loginSuccess() {
-  document.getElementById("loginOverlay").style.display="none";
-  document.getElementById("dashboard").classList.remove("hidden");
-  document.getElementById("welcome").innerText=`User: ${currentUser.name}`;
-  document.getElementById("roleTag").innerHTML = `Role: <span class="badge ${getRoleClass(currentUser.role)}">${currentUser.role}</span>`;
-  applyPermissions();
-  renderAll();
-  renderReport();
-}
+    function startDashboard() {
+        // Always pull the freshest data from the "Database"
+        sessionUser = users.find(u => u.name === sessionUser.name);
+        
+        document.getElementById("loginOverlay").classList.add("hidden");
+        document.getElementById("dashboard").classList.remove("hidden");
+        document.getElementById("userName").innerText = `User: ${sessionUser.name}`;
+        document.getElementById("userRole").innerHTML = `<span class="badge ${sessionUser.role.replace(/\s/g, '')}">${sessionUser.role}</span>`;
+        
+        renderUI();
+    }
 
-// --- Dark Mode Toggle ---
-function toggleTheme() { document.body.classList.toggle("dark"); }
+    // --- Dashboard UI Logic ---
+    function renderUI() {
+        const role = sessionUser.role;
 
-// --- Helpers ---
-function getRoleClass(role) {
-  switch(role) {
-    case "Chief Admin": return "ChiefAdmin";
-    case "Official 1": return "Official1";
-    case "Official 2": return "Official2";
-    default: return "Member";
-  }
-}
+        // Permissions
+        if (role === "Chief Admin" || role === "Official 2") {
+            document.getElementById("staffSection").classList.remove("hidden");
+            document.getElementById("staffControls").classList.remove("hidden");
+        } else {
+            document.getElementById("staffSection").classList.add("hidden");
+        }
 
-// --- Permissions ---
-function applyPermissions() {
-  const r = currentUser.role;
-  if(["Chief Admin","Official 1"].includes(r)) document.getElementById("genBtnContainer").classList.remove("hidden"), document.getElementById("invControls").classList.remove("hidden");
-  if(["Chief Admin","Official 2"].includes(r)) document.getElementById("staffControls").classList.remove("hidden");
-  if(r==="Chief Admin") document.getElementById("takeoverSection").classList.remove("hidden");
-}
+        if (role === "Chief Admin") {
+            document.getElementById("takeoverSection").classList.remove("hidden");
+        } else {
+            document.getElementById("takeoverSection").classList.add("hidden");
+        }
 
-// --- PIN Update ---
-function updateUserPin() {
-  const newPin = document.getElementById("changePinInput").value;
-  if(newPin.length<4) return alert("PIN must be at least 4 digits.");
-  updateUserData(currentUser.name,{pin:newPin});
-  alert("PIN updated successfully!");
-  document.getElementById("changePinInput").value="";
-}
+        renderStaffTable();
+    }
 
-function updateUserData(name,data) {
-  users = users.map(u=>u.name===name?{...u,...data}:u);
-  currentUser = users.find(u=>u.name===name);
-  saveUsers();
-}
+    function renderStaffTable() {
+        let html = `<tr><th>Name</th><th>Role</th><th>Status</th><th>Actions</th></tr>`;
+        users.forEach(u => {
+            // THE MASTER KEY: Current Chief Admin can delete anyone except themselves
+            const canDelete = (sessionUser.role === "Chief Admin" && u.name !== sessionUser.name);
+            
+            html += `<tr>
+                <td>${u.name}</td>
+                <td><span class="badge ${u.role.replace(/\s+/g, '')}">${u.role}</span></td>
+                <td>${u.isOTP ? 'New' : 'Active'}</td>
+                <td>${canDelete ? `<button onclick="removeStaff('${u.name}')" style="background:var(--danger); width:auto; padding:5px 10px; margin:0;">Delete</button>` : '-'}</td>
+            </tr>`;
+        });
+        document.getElementById("staffTable").innerHTML = html;
 
-// --- Staff ---
-function addStaff() {
-  const n=document.getElementById("s_name").value;
-  if(!n) return;
-  users.push({name:n, role:document.getElementById("s_role").value, pin:"1234", isOTP:true});
-  saveUsers(); renderAll();
-}
+        // Update Handover Dropdown
+        document.getElementById("takeoverSelect").innerHTML = users
+            .filter(u => u.name !== sessionUser.name)
+            .map(u => `<option value="${u.name}">${u.name}</option>`).join('');
+    }
 
-// --- Inventory ---
-function addItem() {
-  const n=document.getElementById("i_name").value;
-  const q=parseInt(document.getElementById("i_qty").value);
-  if(n && q) { inventory.push({name:n, qty:q, exp:document.getElementById("i_expiry").value}); saveInventory(); renderAll(); }
-}
+    // --- Actions ---
+    function addStaff() {
+        const name = document.getElementById("newStaffName").value;
+        const role = document.getElementById("newStaffRole").value;
+        if (!name) return alert("Enter a name");
+        if (users.find(u => u.name === name)) return alert("User already exists");
 
-// --- Delete ---
-function delStaff(n) { users = users.filter(u=>u.name!==n); saveUsers(); renderAll(); }
-function delItem(i) { inventory.splice(i,1); saveInventory(); renderAll(); }
+        users.push({name, role, pin: "1234", isOTP: true});
+        saveDB();
+        document.getElementById("newStaffName").value = "";
+        renderStaffTable();
+    }
 
-// --- Takeover ---
-function handleTakeover() {
-  const target = document.getElementById("takeoverSelect").value;
-  users = users.map(u=>{
-    if(u.name===currentUser.name) u.role="Member";
-    if(u.name===target) u.role="Chief Admin";
-    return u;
-  }); saveUsers(); logout();
-}
+    function removeStaff(name) {
+        if (confirm(`Permanently remove ${name}?`)) {
+            users = users.filter(u => u.name !== name);
+            saveDB();
+            renderStaffTable();
+        }
+    }
 
-// --- Reports ---
-function generateReport() {
-  const low = inventory.filter(i=>i.qty<20).length;
-  const exp = inventory.filter(i=>i.exp && i.exp<new Date().toISOString().split('T')[0]).length;
-  lastReport = {by:currentUser.name, role:currentUser.role, time:new Date().toLocaleString(), staff:users.length, items:inventory.length, low, exp};
-  localStorage.setItem("hosp_last_report", JSON.stringify(lastReport));
-  renderReport();
-}
-function renderReport() {
-  const d=document.getElementById("reportDisplay");
-  if(!lastReport) { d.innerHTML="No reports yet."; return; }
-  d.innerHTML=`<strong>Latest Hospital Status</strong><br>
-    <small>Generated by: ${lastReport.by} (${lastReport.role}) on ${lastReport.time}</small>
-    <p>Total Personnel: ${lastReport.staff} | Total Items: ${lastReport.items}</p>
-    <p style="color:#d9534f">⚠️ Low Stock: ${lastReport.low} | 🛑 Expired: ${lastReport.exp}</p>`;
-}
+    function updatePin() {
+        const newPin = document.getElementById("changePinInput").value;
+        if (newPin.length < 4) return alert("PIN must be 4+ digits");
 
-// --- Render Staff & Inventory ---
-function renderAll() {
-  let sHtml=`<tr><th>Name</th><th>Role</th><th>Status</th><th>Actions</th></tr>`;
-  users.forEach(u=>{
-    sHtml+=`<tr><td>${u.name}</td><td><span class="badge ${getRoleClass(u.role)}">${u.role}</span></td><td>${u.isOTP?'Pending OTP':'Active'}</td>
-    <td>${(currentUser.role==='Chief Admin'&&u.name!==currentUser.name)?`<button onclick="delStaff('${u.name}')" style="background:red;color:white">Remove</button>`:'-'}</td></tr>`;
-  });
-  document.getElementById("staffTable").innerHTML=sHtml;
+        updateUserInData(sessionUser.name, { pin: newPin });
+        alert("✅ PIN Updated Successfully!");
+        document.getElementById("changePinInput").value = "";
+    }
 
-  let iHtml=`<tr><th>Item</th><th>Qty</th><th>Expiry</th><th>Actions</th></tr>`;
-  inventory.forEach((item,i)=>{ iHtml+=`<tr><td>${item.name}</td><td>${item.qty}</td><td>${item.exp||'N/A'}</td>
-    <td>${(["Chief Admin","Official 1"].includes(currentUser.role))?`<button onclick="delItem(${i})" style="background:red;color:white">Delete</button>`:'-'}</td></tr>`; });
-  document.getElementById("inventoryTable").innerHTML=iHtml;
+    function transferOwnership() {
+        const target = document.getElementById("takeoverSelect").value;
+        if (!target) return;
 
-  document.getElementById("takeoverSelect").innerHTML=users.filter(u=>u.name!==currentUser.name).map(u=>`<option value="${u.name}">${u.name}</option>`).join('');
-}
+        if (confirm(`Make ${target} the new Chief Admin? You will lose admin rights.`)) {
+            users = users.map(u => {
+                if (u.name === sessionUser.name) u.role = "Member";
+                if (u.name === target) u.role = "Chief Admin";
+                return u;
+            });
+            saveDB();
+            alert("Leadership Transferred. Logging out...");
+            logout();
+        }
+    }
 
-// --- Save / Logout ---
-function saveUsers(){ localStorage.setItem("hosp_users", JSON.stringify(users)); }
-function saveInventory(){ localStorage.setItem("hosp_inv", JSON.stringify(inventory)); }
-function logout(){ location.reload(); }
+    function updateUserInData(name, data) {
+        users = users.map(u => u.name === name ? {...u, ...data} : u);
+        saveDB();
+    }
+
+    function logout() { location.reload(); }
 </script>
 </body>
 </html>
