@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hospital HQ - Professional Dark Mode Dashboard</title>
+    <title>Hospital HQ - Advanced Management System</title>
     <style>
-        /* --- CSS Variables for Light/Dark Mode --- */
         :root {
             --bg: #f4f7f6; --card: #ffffff; --text: #333;
             --primary: #007bff; --danger: #dc3545; --success: #28a745; 
@@ -15,44 +14,37 @@
             --bg: #121212; --card: #1e1e1e; --text: #e0e0e0; 
             --primary: #375a7f; --border: #333;
         }
-
         body { margin: 0; font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); transition: 0.3s; }
-        .container { max-width: 1200px; margin: 20px auto; padding: 0 15px; }
+        .container { max-width: 1100px; margin: 20px auto; padding: 0 15px; }
 
-        /* --- Auth Overlays --- */
-        #loginOverlay { position: fixed; inset: 0; background: rgba(0,0,0,0.9); display: flex; justify-content: center; align-items: center; z-index: 1000; }
+        /* Auth UI */
+        #loginOverlay { position: fixed; inset: 0; background: rgba(0,0,0,0.95); display: flex; justify-content: center; align-items: center; z-index: 1000; }
         .auth-card { background: var(--card); padding: 40px; border-radius: 15px; width: 350px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        input, select { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid var(--border); box-sizing: border-box; background: var(--card); color: var(--text); }
+        input, select { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid var(--border); background: var(--card); color: var(--text); box-sizing: border-box; }
         button { width: 100%; padding: 12px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.2s; color: white; }
-        
-        /* --- Header Bar --- */
-        .admin-bar { background: #2c3e50; color: white; padding: 15px 20px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .admin-bar button { width: auto; padding: 8px 15px; margin: 0; }
 
-        /* --- Dashboard Layout --- */
+        /* Dashboard UI */
+        .admin-bar { background: #2c3e50; color: white; padding: 15px 20px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
         .section { background: var(--card); padding: 25px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 25px; }
         .hidden { display: none !important; }
 
-        /* --- Alerts --- */
-        .alert-banner { background: #fff3cd; color: #856404; padding: 15px; border-radius: 8px; border-left: 5px solid var(--warning); margin-bottom: 20px; font-weight: bold; animation: pulse 2s infinite; }
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
+        /* Alerts */
+        .alert-box { padding: 15px; border-radius: 8px; margin-bottom: 10px; font-weight: bold; border-left: 6px solid; }
+        .alert-danger { background: #f8d7da; color: #721c24; border-color: #f5c6cb; }
+        .alert-warning { background: #fff3cd; color: #856404; border-color: #ffeeba; }
 
-        /* --- Tables --- */
+        /* Tables */
         table { width: 100%; border-collapse: collapse; margin-top: 15px; }
         th, td { padding: 12px; text-align: left; border-bottom: 1px solid var(--border); }
-        th { background: rgba(0,0,0,0.05); font-weight: 600; }
-        .badge { padding: 4px 8px; border-radius: 5px; font-size: 11px; font-weight: bold; text-transform: uppercase; }
-        .badge.ChiefAdmin { background: var(--admin); }
-        .badge.Official1 { background: #457b9d; }
-        .badge.Official2 { background: #2a9d8f; }
-        .badge.Member { background: #6c757d; }
+        th { background: rgba(0,0,0,0.05); }
+        .badge { padding: 4px 8px; border-radius: 5px; font-size: 11px; font-weight: bold; }
+        .badge.ChiefAdmin { background: var(--admin); color: white; }
+        .badge.Official1 { background: #457b9d; color: white; }
+        .badge.Official2 { background: #2a9d8f; color: white; }
 
-        /* --- Controls --- */
         .control-group { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
-        .control-group input, .control-group select { flex: 1; min-width: 150px; }
-        .control-group button { width: 150px; margin: 0; }
-
-        #takeoverSection { border: 2px solid var(--warning); background: rgba(255, 193, 7, 0.05); }
+        .control-group input, .control-group select { flex: 1; min-width: 120px; }
+        .btn-action { width: auto; padding: 10px 20px; margin: 0; }
     </style>
 </head>
 <body>
@@ -60,17 +52,16 @@
 <div id="loginOverlay">
     <div class="auth-card" id="loginBox">
         <h2>🏥 Hospital HQ</h2>
-        <p>Enter your credentials</p>
         <select id="userSelect"></select>
         <input type="password" id="passCode" placeholder="Enter PIN">
         <button style="background:var(--primary)" onclick="handleLogin()">Sign In</button>
     </div>
     <div class="auth-card hidden" id="otpBox">
-        <h2>First Login Setup</h2>
+        <h2>Security Setup</h2>
         <p>Set your private 4-digit PIN</p>
         <input type="password" id="newPin1" placeholder="New PIN">
         <input type="password" id="newPin2" placeholder="Confirm PIN">
-        <button style="background:var(--success)" onclick="saveFirstPin()">Save & Enter</button>
+        <button style="background:var(--success)" onclick="saveFirstPin()">Complete Setup</button>
     </div>
 </div>
 
@@ -78,96 +69,80 @@
     <div class="admin-bar">
         <div><strong id="userName"></strong> | <span id="userRole"></span></div>
         <div style="display:flex; gap:10px;">
-            <button style="background:#6c757d" onclick="document.body.classList.toggle('dark')">Toggle Theme</button>
-            <button style="background:var(--danger)" onclick="logout()">Logout</button>
+            <button class="btn-action" style="background:#6c757d" onclick="document.body.classList.toggle('dark')">Theme</button>
+            <button class="btn-action" style="background:var(--danger)" onclick="logout()">Logout</button>
         </div>
     </div>
 
     <div id="alertArea"></div>
 
-    <div class="section" id="inventorySection">
-        <h3>📦 Inventory Management</h3>
+    <div class="section hidden" id="reportSection">
+        <h3>📊 Hospital Status Report</h3>
+        <button class="btn-action" style="background:var(--primary)" onclick="generateReport()">Generate Live Report</button>
+        <div id="reportOutput" style="margin-top:15px; padding:15px; background:rgba(0,0,0,0.03); border-radius:8px;">
+            Click to see stock and staff statistics.
+        </div>
+    </div>
+
+    <div class="section hidden" id="inventorySection">
+        <h3>📦 Inventory & Stock</h3>
         <div id="invControls" class="control-group hidden">
-            <input id="invItemName" placeholder="Item Name">
-            <input id="invItemQty" type="number" placeholder="Qty">
-            <button style="background:var(--success)" onclick="addInventory()">Update Stock</button>
+            <input id="itemName" placeholder="Item Name">
+            <input id="itemQty" type="number" placeholder="Qty">
+            <input id="itemExp" type="date" title="Expiry Date">
+            <button class="btn-action" style="background:var(--success)" onclick="addInventory()">Update</button>
         </div>
         <table id="inventoryTable"></table>
     </div>
 
     <div class="section hidden" id="staffSection">
-        <h3>👥 Personnel Management</h3>
+        <h3>👥 Staff Management</h3>
         <div id="staffControls" class="control-group hidden">
-            <input id="newStaffName" placeholder="Full Name">
-            <select id="newStaffRole">
-                <option value="Official 1">Official 1 (Inventory)</option>
+            <input id="sName" placeholder="Name">
+            <select id="sRole">
+                <option value="Official 1">Official 1 (Inventory/Reports)</option>
                 <option value="Official 2">Official 2 (Staff)</option>
                 <option value="Member">Member</option>
-                <option value="Chief Admin">Chief Admin</option>
             </select>
-            <button style="background:var(--primary)" onclick="addStaff()">Add Member</button>
+            <button class="btn-action" style="background:var(--primary)" onclick="addStaff()">Add</button>
         </div>
         <table id="staffTable"></table>
     </div>
 
-    <div class="section">
-        <h3>🔐 Security Settings</h3>
-        <p>Change your login PIN:</p>
-        <div class="control-group" style="max-width: 400px;">
-            <input type="password" id="changePinInput" placeholder="New PIN">
-            <button style="background:var(--primary)" onclick="updatePin()">Update PIN</button>
-        </div>
-    </div>
-
     <div class="section hidden" id="takeoverSection">
-        <h3>👑 Management Handover</h3>
-        <p>Select a staff member to transfer <b>Chief Admin</b> rights to. You will become a Member.</p>
+        <h3>👑 Ownership Handover</h3>
         <div class="control-group">
             <select id="takeoverSelect"></select>
-            <button style="background:var(--warning); color:black" onclick="transferOwnership()">Transfer Leadership</button>
+            <button class="btn-action" style="background:var(--warning); color:black" onclick="transferOwnership()">Transfer Leadership</button>
         </div>
     </div>
 </div>
 
 <script>
-    // --- Data Persistence ---
-    let users = JSON.parse(localStorage.getItem("hosp_final_users") || "[]");
-    let inventory = JSON.parse(localStorage.getItem("hosp_final_inv") || "[]");
+    let users = JSON.parse(localStorage.getItem("hosp_v3_users") || "[]");
+    let inventory = JSON.parse(localStorage.getItem("hosp_v3_inv") || "[]");
     let sessionUser = null;
 
-    // Initialize System
     if (users.length === 0) {
         users.push({name: "Ibrahim", role: "Chief Admin", pin: "1234", isOTP: true});
         saveDB();
     }
 
     function saveDB() {
-        localStorage.setItem("hosp_final_users", JSON.stringify(users));
-        localStorage.setItem("hosp_final_inv", JSON.stringify(inventory));
-        refreshDropdowns();
+        localStorage.setItem("hosp_v3_users", JSON.stringify(users));
+        localStorage.setItem("hosp_v3_inv", JSON.stringify(inventory));
+        document.getElementById("userSelect").innerHTML = users.map(u => `<option value="${u.name}">${u.name}</option>`).join('');
     }
+    saveDB();
 
-    function refreshDropdowns() {
-        const uSelect = document.getElementById("userSelect");
-        if(uSelect) uSelect.innerHTML = users.map(u => `<option value="${u.name}">${u.name}</option>`).join('');
-    }
-    refreshDropdowns();
-
-    // --- Authentication ---
     function handleLogin() {
         const name = document.getElementById("userSelect").value;
         const pin = document.getElementById("passCode").value;
         const u = users.find(user => user.name === name && user.pin === pin);
-        
         if (u) {
             sessionUser = u;
-            u.isOTP ? showOTP() : startDashboard();
-        } else alert("❌ Invalid PIN");
-    }
-
-    function showOTP() {
-        document.getElementById("loginBox").classList.add("hidden");
-        document.getElementById("otpBox").classList.remove("hidden");
+            u.isOTP ? (document.getElementById("loginBox").classList.add("hidden"), document.getElementById("otpBox").classList.remove("hidden")) : startDashboard();
+        } else alert("Invalid PIN");
     }
 
     function saveFirstPin() {
@@ -176,11 +151,10 @@
         if (p1 === p2 && p1.length >= 4) {
             users = users.map(u => u.name === sessionUser.name ? {...u, pin: p1, isOTP: false} : u);
             saveDB(); startDashboard();
-        } else alert("❌ PINs must match and be 4+ digits");
+        } else alert("PINs must match and be 4+ digits");
     }
 
     function startDashboard() {
-        // Sync session with DB
         sessionUser = users.find(u => u.name === sessionUser.name);
         document.getElementById("loginOverlay").classList.add("hidden");
         document.getElementById("dashboard").classList.remove("hidden");
@@ -191,9 +165,13 @@
 
     function renderUI() {
         const r = sessionUser.role;
-        // Access Control
-        if (r === "Chief Admin" || r === "Official 1") document.getElementById("invControls").classList.remove("hidden");
-        if (r === "Chief Admin" || r === "Official 2") {
+        // Roles: Official 1 (Inv/Reports), Official 2 (Staff), Chief Admin (All)
+        if (["Chief Admin", "Official 1"].includes(r)) {
+            document.getElementById("inventorySection").classList.remove("hidden");
+            document.getElementById("invControls").classList.remove("hidden");
+            document.getElementById("reportSection").classList.remove("hidden");
+        }
+        if (["Chief Admin", "Official 2"].includes(r)) {
             document.getElementById("staffSection").classList.remove("hidden");
             document.getElementById("staffControls").classList.remove("hidden");
         }
@@ -204,39 +182,59 @@
         checkAlerts();
     }
 
-    // --- Inventory Functions ---
+    // --- Inventory & Outdated Tracking ---
     function addInventory() {
-        const name = document.getElementById("invItemName").value;
-        const qty = parseInt(document.getElementById("invItemQty").value);
-        if(!name || isNaN(qty)) return alert("Fill all fields");
+        const name = document.getElementById("itemName").value;
+        const qty = parseInt(document.getElementById("itemQty").value);
+        const exp = document.getElementById("itemExp").value;
+        if(!name || isNaN(qty) || !exp) return alert("Fill all inventory fields!");
 
-        const item = inventory.find(i => i.name.toLowerCase() === name.toLowerCase());
-        if(item) item.qty += qty; else inventory.push({name, qty});
-        
+        inventory.push({name, qty, exp});
         saveDB(); renderInventory(); checkAlerts();
-        document.getElementById("invItemName").value = ""; document.getElementById("invItemQty").value = "";
     }
 
     function renderInventory() {
-        let html = `<tr><th>Item Name</th><th>Qty</th><th>Status</th></tr>`;
+        let html = `<tr><th>Item</th><th>Qty</th><th>Expiry</th><th>Status</th></tr>`;
+        const today = new Date().toISOString().split('T')[0];
         inventory.forEach(i => {
-            const status = i.qty < 10 ? `<b style="color:var(--danger)">LOW</b>` : `Healthy`;
-            html += `<tr><td>${i.name}</td><td>${i.qty}</td><td>${status}</td></tr>`;
+            const isOutdated = i.exp < today;
+            const status = isOutdated ? `<b style="color:var(--danger)">OUTDATED</b>` : (i.qty < 10 ? `<b style="color:var(--warning)">LOW</b>` : `OK`);
+            html += `<tr><td>${i.name}</td><td>${i.qty}</td><td>${i.exp}</td><td>${status}</td></tr>`;
         });
         document.getElementById("inventoryTable").innerHTML = html;
     }
 
     function checkAlerts() {
-        const low = inventory.filter(i => i.qty < 10);
-        document.getElementById("alertArea").innerHTML = low.length > 0 
-            ? `<div class="alert-banner">⚠️ ALERT: ${low.length} Inventory items are below critical levels!</div>` : "";
+        const today = new Date().toISOString().split('T')[0];
+        const expired = inventory.filter(i => i.exp < today);
+        const low = inventory.filter(i => i.qty < 10 && i.exp >= today);
+        
+        let alertHtml = "";
+        if(expired.length > 0) alertHtml += `<div class="alert-box alert-danger">🚨 CRITICAL: ${expired.length} items are OUTDATED/EXPIRED!</div>`;
+        if(low.length > 0) alertHtml += `<div class="alert-box alert-warning">⚠️ WARNING: ${low.length} items are LOW on stock!</div>`;
+        document.getElementById("alertArea").innerHTML = alertHtml;
     }
 
-    // --- Staff Functions ---
+    // --- Reports ---
+    function generateReport() {
+        const today = new Date().toISOString().split('T')[0];
+        const outdated = inventory.filter(i => i.exp < today).length;
+        const totalItems = inventory.reduce((acc, curr) => acc + curr.qty, 0);
+        
+        document.getElementById("reportOutput").innerHTML = `
+            <strong>Generated by:</strong> ${sessionUser.name} <br>
+            <strong>Total Personnel:</strong> ${users.length} <br>
+            <strong>Total Inventory Stock:</strong> ${totalItems} units <br>
+            <strong>Outdated Items to Dispose:</strong> ${outdated} <br>
+            <strong>Report Time:</strong> ${new Date().toLocaleString()}
+        `;
+    }
+
+    // --- Staff Logic ---
     function addStaff() {
-        const n = document.getElementById("newStaffName").value;
-        const r = document.getElementById("newStaffRole").value;
-        if(!n || users.find(u => u.name === n)) return alert("Invalid Name");
+        const n = document.getElementById("sName").value;
+        const r = document.getElementById("sRole").value;
+        if(!n) return;
         users.push({name: n, role: r, pin: "1234", isOTP: true});
         saveDB(); renderStaff();
     }
@@ -244,7 +242,6 @@
     function renderStaff() {
         let html = `<tr><th>Name</th><th>Role</th><th>Actions</th></tr>`;
         users.forEach(u => {
-            // New Admins can delete old members (including Ibrahim)
             const canDelete = (sessionUser.role === "Chief Admin" && u.name !== sessionUser.name);
             html += `<tr><td>${u.name}</td><td><span class="badge ${u.role.replace(/\s+/g, '')}">${u.role}</span></td>
             <td>${canDelete ? `<button onclick="removeStaff('${u.name}')" style="background:var(--danger); width:auto; padding:5px 10px;">Remove</button>` : '-'}</td></tr>`;
@@ -255,19 +252,12 @@
 
     function removeStaff(n) { if(confirm(`Delete ${n}?`)) { users = users.filter(u => u.name !== n); saveDB(); renderStaff(); }}
 
-    function updatePin() {
-        const p = document.getElementById("changePinInput").value;
-        if(p.length < 4) return alert("PIN too short");
-        users = users.map(u => u.name === sessionUser.name ? {...u, pin: p} : u);
-        saveDB(); alert("PIN Updated!"); document.getElementById("changePinInput").value = "";
-    }
-
     function transferOwnership() {
         const t = document.getElementById("takeoverSelect").value;
-        if(confirm(`Transfer leadership to ${t}?`)) {
+        if(confirm(`Promote ${t} to Chief Admin?`)) {
             users = users.map(u => {
-                if(u.name === sessionUser.name) u.role = "Member";
-                if(u.name === t) u.role = "Chief Admin";
+                if (u.name === sessionUser.name) u.role = "Member";
+                if (u.name === t) u.role = "Chief Admin";
                 return u;
             });
             saveDB(); logout();
